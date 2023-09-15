@@ -8,6 +8,10 @@ class LogicPaintError(Exception):
     pass
 
 
+class LogicPaintContradictError(LogicPaintError):
+    pass
+
+
 class LogicPaintLoadError(LogicPaintError):
     pass
 
@@ -124,18 +128,29 @@ class LogicPaintTable:
         assert len(split) == math.comb(len(cond) + num - 1, num - 1)
         return split
 
+    @staticmethod
+    def get_max_conseq(arr):
+        seq = 0
+        maxseq = 0
+        for v in arr:
+            if v == 1:
+                seq += 1
+            else:
+                maxseq = max(seq, maxseq)
+                seq = 0
+        return maxseq
+
     @classmethod
     def get_valid_split(cls, arr, cond):
         col_splits = cls.split_column(arr)
-        print(col_splits)
         col_split_lens = [len(s.part) for s in col_splits]
+        col_split_seqs = [cls.get_max_conseq(s.part) for s in col_splits]
         cond_split_set = cls.enumerate_split(cond, len(col_splits))
         valid = []
         for cond_split in cond_split_set:
-            cond_split_lens = [sum(v) + len(v) - 1 for v in cond_split]
-            for col_l, cond_l in zip(col_split_lens, cond_split_lens):
-                if col_l < cond_l:
+            for col_l, col_s, cond in zip(col_split_lens, col_split_seqs, cond_split):
+                if col_l < sum(cond) + len(cond) - 1 or col_s > max(cond, default=0):
                     break
             else:
                 valid.append(cond_split)
-        return valid
+        return col_splits, valid
