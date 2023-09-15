@@ -197,3 +197,7 @@ class LogicPaintTable:
             for i, l in enumerate(self.geometry):
                 for index in range(l):
                     self.solve_column(index, i)
+
+
+logicpaint = LogicPaintTable.load("./testcase/1-001.txt")
+logicpaint.solve()
