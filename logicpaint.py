@@ -154,3 +154,46 @@ class LogicPaintTable:
             else:
                 valid.append(cond_split)
         return col_splits, valid
+
+    @staticmethod
+    def solve_split(col, cond):
+        if col.part.count(1) == sum(cond):
+            return col.replace([0 if v == -1 else v for v in col.part])
+        ambi_val = len(col) - (sum(cond) + len(cond) - 1)
+
+        index = 0
+        res = col.part[:]
+        for c in cond:
+            if ambi_val < c:
+                res[index + ambi_val : index + c] = [1] * (c - ambi_val)
+                if ambi_val == 0 and index + c < len(col):
+                    res[index + c] = 0
+            index += c + 1
+        # print(res)
+        return col.replace(res)
+
+    def solve_column(self, index, axis):
+        arr = self.get_col(index, axis)
+        col_splits, valid_split = self.get_valid_split(arr, self.cond[axis][index])
+
+        if len(valid_split) == 0:
+            raise LogicPaintContradictError()
+        if len(valid_split) == 1:
+            cond_split = valid_split[0]
+            for col, cond in zip(col_splits, cond_split):
+                # print(f"{axis=}, {index=}, {cond_split}, {col.part}, {col.complete}")
+                if col.complete:
+                    continue
+                col_res = self.solve_split(col, cond)
+                arr[col.start_index : col.start_index + len(col)] = col_res.part
+        else:
+            pass
+
+        self.set_col(index, axis, arr)
+
+    def solve(self):
+        while True:
+            self.print_table()
+            for i, l in enumerate(self.geometry):
+                for index in range(l):
+                    self.solve_column(index, i)
