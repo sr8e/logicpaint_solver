@@ -18,6 +18,17 @@ class LogicPaintTable:
         part: list
         start_index: int
 
+        def __len__(self) -> int:
+            return len(self.part)
+
+        def replace(self, part):
+            assert len(part) == len(self.part)
+            return self.__class__(part, self.start_index)
+
+        @property
+        def complete(self) -> bool:
+            return all(v != -1 for v in self.part)
+
     def __init__(self, w, h, row_cond, col_cond):
         self.table = [[-1] * w] * h
         self.geometry = (w, h)
