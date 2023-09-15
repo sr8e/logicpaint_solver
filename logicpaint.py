@@ -1,6 +1,15 @@
 import math
+import pathlib
 from collections import deque
 from typing import NamedTuple
+
+
+class LogicPaintError(Exception):
+    pass
+
+
+class LogicPaintLoadError(LogicPaintError):
+    pass
 
 
 class LogicPaintTable:
@@ -11,14 +20,48 @@ class LogicPaintTable:
 
     def __init__(self, w, h, row_cond, col_cond):
         self.table = [[-1] * w] * h
-        self.row_cond = row_cond
-        self.col_cond = col_cond
+        self.geometry = (w, h)
+        self.cond = (row_cond, col_cond)
+        assert (
+            len(row_cond) == h and len(col_cond) == w
+        ), f"{len(row_cond)} != {h} or {len(col_cond)} != {w}"
 
-    def get_col(self, index):
-        return [row[index] for row in self.table]
+    def get_col(self, index, axis):
+        if axis == 0:
+            return self.table[index][:]
+        else:
+            return [row[index] for row in self.table]
 
-    def get_row(self, index):
-        return self.table[index][:]
+    def set_col(self, index, axis, arr):
+        assert len(arr) == self.geometry[axis]
+        if axis == 0:
+            self.table[index] = arr
+        else:
+            for i, v in enumerate(arr):
+                self.table[i][index] = v
+
+    def print_table(self, fill="x", blank=" ", undef="_"):
+        print_map = {-1: undef, 0: blank, 1: fill}
+        for row in self.table:
+            print("".join([print_map[v] for v in row]))
+
+    @classmethod
+    def load(cls, path_str):
+        def read_parse(f):
+            return [int(s) for s in f.readline().split()]
+
+        path = pathlib.Path(path_str)
+        if not (path.exists() and path.is_file()):
+            raise LogicPaintLoadError("Specified path is not a file or does not exist.")
+
+        with open(path.absolute(), "r") as f:
+            try:
+                w, h = read_parse(f)
+                row_cond = [read_parse(f) for _ in range(h)]
+                col_cond = [read_parse(f) for _ in range(w)]
+            except:
+                raise LogicPaintLoadError("Loaded file is not in correct format.")
+        return cls(w, h, row_cond, col_cond)
 
     @classmethod
     def split_column(cls, arr):
