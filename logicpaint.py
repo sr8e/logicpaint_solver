@@ -181,8 +181,8 @@ class LogicPaintTable:
                 valid.append(cond_split)
         return col_splits, valid
 
-    @staticmethod
-    def solve_split(col, cond):
+    @classmethod
+    def solve_split(cls, col, cond):
         if col.part.count(1) == sum(cond):
             return col.replace([0 if v == -1 else v for v in col.part])
         ambi_val = len(col) - (sum(cond) + len(cond) - 1)
@@ -191,14 +191,39 @@ class LogicPaintTable:
         res = col.part[:]
         for c in cond:
             if ambi_val < c:
-                res[index + ambi_val : index + c] = [1] * (c - ambi_val)
+                cls.fill_part(res, index + ambi_val, index + c, 1)
                 if ambi_val == 0 and index + c < len(col):
                     res[index + c] = 0
             index += c + 1
-        # print(res)
+
+        fc = cond[0]
+        if any(v == 1 for v in res[: fc + 1]):
+            seq = cls.get_conseq(res)[0]
+            if seq.index < fc:
+                cls.fill_part(res, seq.index, fc, 1)
+                if seq.index == 0 and fc < len(res):
+                    res[fc] = 0
+            if seq.index + seq.length > fc:
+                cls.fill_part(res, 0, seq.index + seq.length - fc, 0)
+                if seq.length == fc and seq.index + seq.length < len(res):
+                    res[seq.index + seq.length] = 0
+        lc = cond[-1]
+        if any(v == 1 for v in res[-lc - 1 :]):
+            seq = cls.get_conseq(res)[-1]
+            if seq.index + seq.length > len(res) - lc:
+                cls.fill_part(res, -lc, seq.index + seq.length, 1)
+                if seq.index + seq.length == len(res) and lc < len(res):
+                    res[-lc - 1] = 0
+            if seq.index < len(res) - lc:
+                cls.fill_part(res, seq.index + lc, len(res), 0)
+                if seq.length == lc and seq.index > 0:
+                    res[seq.index - 1] = 0
+
+        # print(f"{col.part} -> {res}")
         return col.replace(res)
 
     def solve_column(self, index, axis):
+        # print(f"{axis=}, {index=}")
         arr = self.get_col(index, axis)
         col_splits, valid_split = self.get_valid_split(arr, self.cond[axis][index])
 
