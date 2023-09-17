@@ -9,7 +9,11 @@ class LogicPaintError(Exception):
 
 
 class LogicPaintContradictError(LogicPaintError):
-    pass
+    def __init__(self, obj=None, msg=None):
+        if msg is not None:
+            print(msg)
+        if obj is not None:
+            obj.print_table()
 
 
 class LogicPaintLoadError(LogicPaintError):
@@ -177,7 +181,9 @@ class LogicPaintTable:
         col_splits, valid_split = self.get_valid_split(arr, self.cond[axis][index])
 
         if len(valid_split) == 0:
-            raise LogicPaintContradictError()
+            raise LogicPaintContradictError(
+                self, f"at {axis=}, {index=}, cond={self.cond[axis][index]}"
+            )
         if len(valid_split) == 1:
             cond_split = valid_split[0]
             for col, cond in zip(col_splits, cond_split):
