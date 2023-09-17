@@ -135,16 +135,36 @@ class LogicPaintTable:
         return split
 
     @staticmethod
-    def get_max_conseq(arr):
+    def fill_part(arr, start, end, value):
+        # modify array in-place
+        if start < 0:
+            start = start + len(arr)
+        if end < 0:
+            end = end + len(arr)
+        assert start < end, f"{start=} {end=} {len(arr)=}"
+        arr[start:end] = [value] * (end - start)
+
+    @staticmethod
+    def get_conseq(arr):
+        class ConsequentOnes(NamedTuple):
+            length: list
+            index: int
+
         seq = 0
-        maxseq = 0
-        for v in arr:
+        seq_list = []
+        for i, v in enumerate(arr):
             if v == 1:
                 seq += 1
-            else:
-                maxseq = max(seq, maxseq)
+            elif seq != 0:
+                seq_list.append(ConsequentOnes(seq, i - seq))
                 seq = 0
-        return maxseq
+        if seq != 0:
+            seq_list.append(ConsequentOnes(seq, len(arr) - seq))
+        return seq_list
+
+    @classmethod
+    def get_max_conseq(cls, arr):
+        return max([c.length for c in cls.get_conseq(arr)], default=0)
 
     @classmethod
     def get_valid_split(cls, arr, cond):
