@@ -67,7 +67,9 @@ class LogicPaintTable:
     @classmethod
     def load(cls, path_str):
         def read_parse(f):
-            return [int(s) for s in f.readline().split()]
+            while (line := f.readline())[0] == "#":
+                pass
+            return [int(s) for s in line.split()]
 
         path = pathlib.Path(path_str)
         if not (path.exists() and path.is_file()):
